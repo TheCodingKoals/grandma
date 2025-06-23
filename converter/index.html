@@ -1,1 +1,71 @@
 <!DOCTYPE html>
+<html>
+<body>
+  <h2>👵 Grandma Converter Demo</h2>
+
+  <input type="file" id="gmaFile" accept=".gma"><br/>
+  <textarea id="gmaInput" style="width:100%; height:150px;" placeholder="Grandma code will appear here..."></textarea><br/>
+  <button id="convertBtn">Convert</button><br/>
+  <textarea id="output" style="width:100%; height:150px;" placeholder="Result..."></textarea><br/>
+  <button id="downloadBtn">Download Output</button>
+
+  <script src="convert.js"></script>
+  <script>
+    const gmaFile = document.getElementById('gmaFile');
+    const gmaInput = document.getElementById('gmaInput');
+    const output = document.getElementById('output');
+
+    let currentTarget = null;
+
+    gmaFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const text = await file.text();
+      gmaInput.value = text;
+
+      // Try extracting target from the file
+      const match = text.match(/Grandma for "(.*?)"/);
+      if (match) {
+        currentTarget = match[1];
+      } else {
+        currentTarget = null;
+      }
+    });
+
+    document.getElementById('convertBtn').addEventListener('click', () => {
+      try {
+        const result = compileGrandma(gmaInput.value);
+        output.value = result;
+
+        // Extract target after compilation
+        const match = gmaInput.value.match(/Grandma for "(.*?)"/);
+        currentTarget = match ? match[1] : null;
+
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!output.value) {
+        alert("Nothing to download!");
+        return;
+      }
+
+      let extension = '.txt';
+      if (currentTarget === "HTML") extension = '.html';
+      else if (currentTarget === "CSS") extension = '.css';
+      else if (currentTarget === "JavaScript") extension = '.js';
+      else if (currentTarget === "Arduino") extension = '.ino';
+      // You can add more as needed
+
+      const blob = new Blob([output.value], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.download = 'output' + extension;
+      a.href = URL.createObjectURL(blob);
+      a.click();
+    });
+  </script>
+</body>
+</html>
