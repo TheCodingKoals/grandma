@@ -3,6 +3,13 @@ function compileGrandma(content) {
   const lines = content.split('\n');
   let target = null;
 
+  output.push(`<!DOCTYPE html>
+    <html>
+    <head>
+    </head>
+    <body>
+  `)
+
   // Identify target language
   for (const line of lines) {
     if (line.startsWith("Grandma for")) {
@@ -33,6 +40,18 @@ function compileGrandma(content) {
       } else if (keyword === "Text") {
         output.push(`<p>${args.join(" ").replace(/"/g, "")}</p>`);
       }
+      else if (keyword === "Button")
+      {
+        output.push(`<button>${args.join(" ").replace(/"/g, "")}</button>`);
+      }
+      else if (keyword === "PageName")
+      {
+        output.push(`<title>${args.join(" ").replace(/"/g, "")}</title>`);
+      }
+      else if (keyword === "Space")
+      {
+        output.push('<br>');
+      }
       // Add more rules as needed
     } else if (target === "CSS") {
       if (keyword === "Rule") {
@@ -44,6 +63,10 @@ function compileGrandma(content) {
       }
     }
   }
+
+  output.push(`</body>
+    </html>
+  `);
 
   return output.join("\n");
 }
