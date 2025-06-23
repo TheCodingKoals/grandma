@@ -3,12 +3,7 @@ function compileGrandma(content) {
   const lines = content.split('\n');
   let target = null;
 
-  output.push(`<!DOCTYPE html>
-    <html>
-    <head>
-    </head>
-    <body>
-  `)
+  const output = [];
 
   // Identify target language
   for (const line of lines) {
@@ -25,7 +20,14 @@ function compileGrandma(content) {
     throw new Error("Missing 'Grandma for \"...\"' line.");
   }
 
-  const output = [];
+  if (target === "HTML") {
+    output.push(`<!DOCTYPE html>`);
+    output.push(`<html>`);
+    output.push(`<head>`);
+    output.push(`</head>`);
+    output.push(`<body>`);
+  }
+
   for (let line of lines) {
     line = line.trim();
     if (!line || line.startsWith("Grandma for")) continue;
@@ -35,24 +37,17 @@ function compileGrandma(content) {
     const args = parts.join(" ").match(/"[^"]*"|\S+/g) || [];
 
     if (target === "HTML") {
-      if (keyword === "Header") {
+      if (keyword === "PageName") {
+        output.push(`<title>${args.join(" ").replace(/"/g, "")}</title>`);
+      } else if (keyword === "Header") {
         output.push(`<h1>${args.join(" ").replace(/"/g, "")}</h1>`);
       } else if (keyword === "Text") {
         output.push(`<p>${args.join(" ").replace(/"/g, "")}</p>`);
-      }
-      else if (keyword === "Button")
-      {
+      } else if (keyword === "Button") {
         output.push(`<button>${args.join(" ").replace(/"/g, "")}</button>`);
+      } else if (keyword === "Space") {
+        output.push(`<br>`);
       }
-      else if (keyword === "PageName")
-      {
-        output.push(`<title>${args.join(" ").replace(/"/g, "")}</title>`);
-      }
-      else if (keyword === "Space")
-      {
-        output.push('<br>');
-      }
-      // Add more rules as needed
     } else if (target === "CSS") {
       if (keyword === "Rule") {
         output.push(`${args[0].replace(/"/g, "")} { ${args.slice(1).join(" ").replace(/"/g, "")} }`);
@@ -62,11 +57,19 @@ function compileGrandma(content) {
         output.push(`console.log(${args.join(" ")});`);
       }
     }
+    else if (target === "Arduino")
+    {
+      if (keyword === "Library")
+      {
+        output.push(`#include<${args.join(" ").replace(/"/g, "")}>`);
+      }
+    }
   }
 
-  output.push(`</body>
-    </html>
-  `);
+  if (target === "HTML") {
+    output.push(`</body>`);
+    output.push(`</html>`);
+  }
 
   return output.join("\n");
 }
