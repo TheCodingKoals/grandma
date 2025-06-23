@@ -15,26 +15,54 @@
     const gmaInput = document.getElementById('gmaInput');
     const output = document.getElementById('output');
 
+    let currentTarget = null;
+
     gmaFile.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
       const text = await file.text();
       gmaInput.value = text;
+
+      // Try extracting target from the file
+      const match = text.match(/Grandma for "(.*?)"/);
+      if (match) {
+        currentTarget = match[1];
+      } else {
+        currentTarget = null;
+      }
     });
 
     document.getElementById('convertBtn').addEventListener('click', () => {
       try {
-        output.value = compileGrandma(gmaInput.value);
+        const result = compileGrandma(gmaInput.value);
+        output.value = result;
+
+        // Extract target after compilation
+        const match = gmaInput.value.match(/Grandma for "(.*?)"/);
+        currentTarget = match ? match[1] : null;
+
       } catch (err) {
         alert(err.message);
       }
     });
 
     document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!output.value) {
+        alert("Nothing to download!");
+        return;
+      }
+
+      let extension = '.txt';
+      if (currentTarget === "HTML") extension = '.html';
+      else if (currentTarget === "CSS") extension = '.css';
+      else if (currentTarget === "JavaScript") extension = '.js';
+      else if (currentTarget === "Arduino") extension = '.ino';
+      // You can add more as needed
+
       const blob = new Blob([output.value], { type: 'text/plain' });
       const a = document.createElement('a');
-      a.download = 'output.txt';
+      a.download = 'output' + extension;
       a.href = URL.createObjectURL(blob);
       a.click();
     });
