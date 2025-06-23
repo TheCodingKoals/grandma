@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Grandma Editor</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #gmaEditor { width: 100%; height: 300px; font-family: monospace; }
+    button, input[type="file"] { margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h2>👵 Grandma Editor</h2>
+  <input type="file" id="gmaFile" accept=".gma"><br/>
+  <textarea id="gmaEditor" placeholder="Edit .gma code here..."></textarea><br/>
+  <button id="download">Save to device</button>
+
+  <script>
+    const gmaFile = document.getElementById('gmaFile');
+    const gmaEditor = document.getElementById('gmaEditor');
+    const downloadButton = document.getElementById('download');
+
+    // Load .gma file
+    gmaFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (!file.name.endsWith('.gma')) {
+        alert("Please select a .gma file.");
+        return;
+      }
+
+      const text = await file.text();
+      gmaEditor.value = text;
+    });
+
+    // Save .gma file
+    downloadButton.addEventListener('click', () => {
+      const text = gmaEditor.value;
+      if (!text.trim()) {
+        alert("Nothing to save.");
+        return;
+      }
+
+      const blob = new Blob([text], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.download = 'edited.gma';
+      a.href = URL.createObjectURL(blob);
+      a.click();
+    });
+  </script>
+</body>
+</html>
