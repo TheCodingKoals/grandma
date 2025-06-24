@@ -1,74 +1,116 @@
 function compileGrandma(content) {
   const lines = content.split('\n');
-  let target = null;
+  let currentTarget = null;
 
-  const output = [];
-
-  // Identify target language
-  for (const line of lines) {
-    if (line.startsWith("Grandma for")) {
-      const match = line.match(/Grandma for "(.*?)"/);
-      if (match) {
-        target = match[1];
-        break;
-      }
-    }
-  }
-
-  if (!target) {
-    throw new Error("Missing 'Grandma for \"...\"' line.");
-  }
-
-  if (target === "HTML") {
-    output.push(`<!DOCTYPE html>`);
-    output.push(`<html>`);
-    output.push(`<head>`);
-    output.push(`</head>`);
-    output.push(`<body>`);
-  }
+  const htmlOutput = [];
+  const jsOutput = [];
+  const cssOutput = [];
+  const arduinoOutput = [];
+  const csharpOutput = [];
 
   for (let line of lines) {
     line = line.trim();
-    if (!line || line.startsWith("Grandma for")) continue;
+    if (!line) continue;
+
+    // Switch between modes
+    if (line.startsWith("Grandma for")) {
+      const match = line.match(/Grandma for "(.*?)"/);
+      if (match) {
+        currentTarget = match[1];
+      }
+      continue;
+    }
 
     const parts = line.split(" ");
     const keyword = parts.shift();
-    const args = parts.join(" ").match(/"[^"]*"|\S+/g) || [];
+    const id = parts.shift();
+    const rest = parts.join(" ").match(/"[^"]*"|\S+/g) || [];
+    const text = rest.join(" ").replace(/"/g, "").trim();
 
-    if (target === "HTML") {
-      if (keyword === "PageName") {
-        output.push(`<title>${args.join(" ").replace(/"/g, "")}</title>`);
-      } else if (keyword === "Header") {
-        output.push(`<h1>${args.join(" ").replace(/"/g, "")}</h1>`);
-      } else if (keyword === "Text") {
-        output.push(`<p>${args.join(" ").replace(/"/g, "")}</p>`);
-      } else if (keyword === "Button") {
-        output.push(`<button>${args.join(" ").replace(/"/g, "")}</button>`);
-      } else if (keyword === "Space") {
-        output.push(`<br>`);
-      }
-    } else if (target === "CSS") {
-      if (keyword === "Rule") {
-        output.push(`${args[0].replace(/"/g, "")} { ${args.slice(1).join(" ").replace(/"/g, "")} }`);
-      }
-    } else if (target === "JavaScript") {
-      if (keyword === "Log") {
-        output.push(`console.log(${args.join(" ")});`);
-      }
-    }
-    else if (target === "Arduino")
-    {
-      if (keyword === "Library")
-      {
-        output.push(`#include<${args.join(" ").replace(/"/g, "")}>`);
-      }
+    switch (currentTarget) {
+      case "HTML":
+        switch (keyword) {
+          case "PageName":
+            htmlOutput.push(`<title>${text}</title>`);
+            break;
+          case "Header":
+            htmlOutput.push(`<h1 id="${id}">${text}</h1>`);
+            break;
+          case "SubHeader":
+            htmlOutput.push(`<h2 id="${id}">${text}</h2>`);
+            break;
+          case "Text":
+            htmlOutput.push(`<p id="${id}">${text}</p>`);
+            break;
+          case "Button":
+            htmlOutput.push(`<button id="${id}">${text}</button>`);
+            break;
+          case "Space":
+            htmlOutput.push(`<br>`);
+            break;
+        }
+        break;
+
+      case "JavaScript":
+        switch (keyword) {
+          case "Log":
+            jsOutput.push(`console.log("${text}");`);
+            break;
+          case "Alert":
+            jsOutput.push(`alert("${text}");`);
+            break;
+        }
+        break;
+
+      case "CSS":
+        if (keyword === "Rule") {
+          cssOutput.push(`${id} { ${rest.join(" ").replace(/"/g, "")} }`);
+        }
+        break;
+
+      case "Arduino":
+        switch (keyword) {
+          case "PinWrite":
+            const [pin, state] = rest;
+            arduinoOutput.push(`digitalWrite(${pin}, ${state.toUpperCase()});`);
+            break;
+          case "SerialPrint":
+            arduinoOutput.push(`Serial.println("${text}");`);
+            break;
+        }
+        break;
+
+      case "C#":
+        switch (keyword) {
+          case "ConsoleWriteLine":
+            csharpOutput.push(`Console.WriteLine("${text}");`);
+            break;
+        }
+        break;
+
+      default:
+        break;
     }
   }
 
-  if (target === "HTML") {
-    output.push(`</body>`);
-    output.push(`</html>`);
+  // Final Output
+  let finalOutput = '';
+
+  if (htmlOutput.length) {
+    finalOutput += `<!DOCTYPE html>\n<html>\n<head>\n${htmlOutput.filter(line => line.startsWith("<title>")).join("\n")}`;
+    if (cssOutput.length) {
+      finalOutput += `\n<style>\n${cssOutput.join("\n")}\n</style>`;
+    }
+    finalOutput += `\n</head>\n<body>\n${htmlOutput.filter(line => !line.startsWith("<title>")).join("\n")}`;
+    if (jsOutput.length) {
+      finalOutput += `\n<script>\n${jsOutput.join("\n")}\n</script>`;
+    }
+    finalOutput += `\n</body>\n</html>`;
+  } else if (arduinoOutput.length) {
+    finalOutput += `// Arduino Output\n${arduinoOutput.join("\n")}`;
+  } else if (csharpOutput.length) {
+    finalOutput += `// C# Output\n${csharpOutput.join("\n")}`;
   }
 
-  return output.join("\n");
+  return finalOutput.trim();
 }
