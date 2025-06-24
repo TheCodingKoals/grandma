@@ -1,4 +1,3 @@
-// converter.js
 function compileGrandma(content) {
   const lines = content.split('\n');
   let target = null;
@@ -24,8 +23,6 @@ function compileGrandma(content) {
     output.push(`<!DOCTYPE html>`);
     output.push(`<html>`);
     output.push(`<head>`);
-    output.push(`</head>`);
-    output.push(`<body>`);
   }
 
   for (let line of lines) {
@@ -34,34 +31,29 @@ function compileGrandma(content) {
 
     const parts = line.split(" ");
     const keyword = parts.shift();
-    const args = parts.join(" ").match(/"[^"]*"|\S+/g) || [];
+    const id = parts.shift();
+    const rest = parts.join(" ").match(/"[^"]*"|\S+/g) || [];
+    const text = rest.join(" ").replace(/"/g, "");
 
     if (target === "HTML") {
       if (keyword === "PageName") {
-        output.push(`<title>${args.join(" ").replace(/"/g, "")}</title>`);
+        output.push(`<title>${text}</title>`);
       } else if (keyword === "Header") {
-        output.push(`<h1>${args.join(" ").replace(/"/g, "")}</h1>`);
+        output.push(`<h1 id="${id}">${text}</h1>`);
       } else if (keyword === "Text") {
-        output.push(`<p>${args.join(" ").replace(/"/g, "")}</p>`);
+        output.push(`<p id="${id}">${text}</p>`);
       } else if (keyword === "Button") {
-        output.push(`<button>${args.join(" ").replace(/"/g, "")}</button>`);
+        output.push(`<button id="${id}">${text}</button>`);
       } else if (keyword === "Space") {
         output.push(`<br>`);
       }
     } else if (target === "CSS") {
       if (keyword === "Rule") {
-        output.push(`${args[0].replace(/"/g, "")} { ${args.slice(1).join(" ").replace(/"/g, "")} }`);
+        output.push(`${id} { ${rest.join(" ").replace(/"/g, "")} }`);
       }
     } else if (target === "JavaScript") {
       if (keyword === "Log") {
-        output.push(`console.log(${args.join(" ")});`);
-      }
-    }
-    else if (target === "Arduino")
-    {
-      if (keyword === "Library")
-      {
-        output.push(`#include<${args.join(" ").replace(/"/g, "")}>`);
+        output.push(`console.log(${rest.join(" ")});`);
       }
     }
   }
