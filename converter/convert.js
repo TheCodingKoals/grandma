@@ -23,6 +23,8 @@ function compileGrandma(content) {
     output.push(`<!DOCTYPE html>`);
     output.push(`<html>`);
     output.push(`<head>`);
+    output.push(`</head>`);
+    output.push(`<body>`);
   }
 
   for (let line of lines) {
